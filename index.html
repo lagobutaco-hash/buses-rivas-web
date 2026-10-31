@@ -158,6 +158,13 @@
   </button>
   <p id="mensajeViaje"></p>
 </div>
+      <hr>
+
+<h3>Viajes registrados</h3>
+
+<div id="listaViajes">
+  Cargando viajes...
+</div>
      <h3>Resumen de reservas</h3>
 
 <div class="trip" style="margin-bottom:15px">
@@ -376,6 +383,7 @@ async function adminLogin() {
   document.getElementById("adminContent").style.display = "block";
 
   await loadAdminReservations();
+  await loadAdminTrips();
 }
 async function crearViaje() {
   const destino = document.getElementById("nuevoDestino").value.trim();
@@ -424,6 +432,50 @@ async function crearViaje() {
   document.getElementById("nuevaHora").value = "";
   document.getElementById("nuevoPrecio").value = "";
   document.getElementById("nuevoAbono").value = "";
+}
+   async function loadAdminTrips() {
+  const list = document.getElementById("listaViajes");
+  list.textContent = "Cargando viajes...";
+
+  const { data, error } = await supabaseClient
+    .from("viajes")
+    .select("id, destino, fecha, hora, valor_pasaje, monto_abono, activo")
+    .order("fecha", { ascending: true });
+
+  if (error) {
+    list.textContent = "Error al consultar viajes: " + error.message;
+    return;
+  }
+
+  list.replaceChildren();
+
+  if (!data || data.length === 0) {
+    list.textContent = "Todavía no hay viajes registrados.";
+    return;
+  }
+
+  data.forEach(viaje => {
+    const card = document.createElement("div");
+    card.className = "trip";
+    card.style.marginBottom = "12px";
+
+    const detalles = [
+      ["Destino", viaje.destino],
+      ["Fecha", viaje.fecha],
+      ["Hora", viaje.hora],
+      ["Valor", "$" + viaje.valor_pasaje],
+      ["Abono", "$" + (viaje.monto_abono || 0)],
+      ["Estado", viaje.activo ? "Activo" : "Inactivo"]
+    ];
+
+    detalles.forEach(([label, value]) => {
+      const p = document.createElement("p");
+      p.textContent = `${label}: ${value ?? ""}`;
+      card.appendChild(p);
+    });
+
+    list.appendChild(card);
+  });
 }
  async function loadAdminReservations() {
   const list = document.getElementById("reservationsList");
