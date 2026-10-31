@@ -346,7 +346,7 @@ async function adminLogin() {
   await loadAdminReservations();
 }
 
-async function loadAdminReservations() {
+async function loadAdminReservations() async function loadAdminReservations() {
   const list = document.getElementById("reservationsList");
   list.textContent = "Cargando reservas...";
 
@@ -395,6 +395,64 @@ async function loadAdminReservations() {
       p.textContent = `${label}: ${value ?? ""}`;
       card.appendChild(p);
     });
+
+    if (reserva.estado === "pendiente") {
+      const confirmButton = document.createElement("button");
+      confirmButton.textContent = "Confirmar reserva";
+      confirmButton.style.marginRight = "8px";
+
+      confirmButton.onclick = async () => {
+        if (!window.confirm("¿Confirmar esta reserva?")) return;
+
+        confirmButton.disabled = true;
+
+        const { error } = await supabaseClient.rpc(
+          "confirmar_reserva",
+          { p_reserva_id: reserva.id }
+        );
+
+        if (error) {
+          alert("Error al confirmar: " + error.message);
+          confirmButton.disabled = false;
+          return;
+        }
+
+        alert("Reserva confirmada correctamente.");
+        await loadAdminReservations();
+      };
+
+      card.appendChild(confirmButton);
+    }
+
+    if (reserva.estado === "pendiente" ||
+        reserva.estado === "confirmada") {
+      const cancelButton = document.createElement("button");
+      cancelButton.textContent = "Cancelar reserva";
+
+      cancelButton.onclick = async () => {
+        if (!window.confirm(
+          "¿Estás seguro de cancelar esta reserva y liberar sus asientos?"
+        )) return;
+
+        cancelButton.disabled = true;
+
+        const { error } = await supabaseClient.rpc(
+          "cancelar_reserva",
+          { p_reserva_id: reserva.id }
+        );
+
+        if (error) {
+          alert("Error al cancelar: " + error.message);
+          cancelButton.disabled = false;
+          return;
+        }
+
+        alert("Reserva cancelada y asientos liberados.");
+        await loadAdminReservations();
+      };
+
+      card.appendChild(cancelButton);
+    }
 
     list.appendChild(card);
   });
