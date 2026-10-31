@@ -377,7 +377,54 @@ async function adminLogin() {
 
   await loadAdminReservations();
 }
+async function crearViaje() {
+  const destino = document.getElementById("nuevoDestino").value.trim();
+  const fecha = document.getElementById("nuevaFecha").value;
+  const hora = document.getElementById("nuevaHora").value;
+  const precio = Number(document.getElementById("nuevoPrecio").value);
+  const abono = Number(document.getElementById("nuevoAbono").value);
+  const mensaje = document.getElementById("mensajeViaje");
 
+  if (!destino || !fecha || !hora ||
+      document.getElementById("nuevoPrecio").value === "" ||
+      document.getElementById("nuevoAbono").value === "") {
+    mensaje.textContent = "Completa todos los campos.";
+    return;
+  }
+
+  if (!Number.isInteger(precio) || precio < 0 ||
+      !Number.isInteger(abono) || abono < 0 ||
+      abono > precio) {
+    mensaje.textContent = "Revisa los valores del pasaje y del abono.";
+    return;
+  }
+
+  mensaje.textContent = "Guardando viaje...";
+
+  const { error } = await supabaseClient
+    .from("viajes")
+    .insert([{
+      destino: destino,
+      fecha: fecha,
+      hora: hora,
+      valor_pasaje: precio,
+      monto_abono: abono,
+      activo: true
+    }]);
+
+  if (error) {
+    mensaje.textContent = "Error al guardar: " + error.message;
+    return;
+  }
+
+  mensaje.textContent = "¡Viaje guardado correctamente!";
+
+  document.getElementById("nuevoDestino").value = "";
+  document.getElementById("nuevaFecha").value = "";
+  document.getElementById("nuevaHora").value = "";
+  document.getElementById("nuevoPrecio").value = "";
+  document.getElementById("nuevoAbono").value = "";
+}
  async function loadAdminReservations() {
   const list = document.getElementById("reservationsList");
   list.textContent = "Cargando reservas...";
