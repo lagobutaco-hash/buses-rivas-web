@@ -120,73 +120,151 @@
     Buses Rivas · Angol, Región de La Araucanía
   </footer>
 
-  <script>
+ <script>
+    const SUPABASE_URL = "https://eowzqhlltepgucmuedpk.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobmNuYnFrdGNmanBvbGhmanhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM0MDgyMjcsImV4cCI6MjEwODk4NDIyN30.DRW5Ylapc1RvLmk6Jr2sZsOiz1e_W_qBY7M7DPuthmw";
+
     const selected = new Set();
     const occupied = new Set();
     const seats = document.getElementById("seats");
 
-    // 46 asientos distribuidos en dos lados, con pasillo central.
-    for (let row = 0; row < 12; row++) {
-      const left = [row * 4 + 1, row * 4 + 2];
-      const right = [row * 4 + 3, row * 4 + 4];
+    let viajeId = null;
 
-      if (row === 11) {
-        left.splice(0, 2, 45, 46);
-        right.splice(0, 2);
-      }
-
-      [...left, ...right].forEach(number => {
-        if (number > 46) return;
-        const button = document.createElement("button");
-        button.className = "seat";
-        button.textContent = number;
-        button.type = "button";
-
-        if (occupied.has(number)) button.classList.add("occupied");
-
-        button.onclick = () => {
-          if (occupied.has(number)) return;
-          if (selected.has(number)) {
-            selected.delete(number);
-            button.classList.remove("selected");
-          } else {
-            selected.add(number);
-            button.classList.add("selected");
+    async function loadOccupiedSeats() {
+      try {
+        const viajesResponse = await fetch(
+          `${SUPABASE_URL}/rest/v1/viajes?destino=eq.Puerto%20Saavedra&fecha=eq.2026-11-08&select=id`,
+          {
+            headers: {
+              apikey: SUPABASE_KEY,
+              Authorization: `Bearer ${SUPABASE_KEY}`
+            }
           }
-          updateSummary();
-        };
+        );
 
-        seats.appendChild(button);
-      });
+        if (!viajesResponse.ok) {
+          throw new Error("No se pudieron consultar los viajes.");
+        }
 
-      if (row !== 11) {
-        const aisle = document.createElement("div");
-        aisle.className = "aisle";
-        aisle.textContent = "PASILLO";
-        seats.appendChild(aisle);
+        const viajes = await viajesResponse.json();
+
+        if (!viajes.length) {
+          throw new Error("No se encontró el viaje.");
+        }
+
+        viajeId = viajes[0].id;
+
+        const response = await fetch(
+          `${SUPABASE_URL}/rest/v1/asientos_reservados?viaje_id=eq.${viajeId}&select=asiento_numero`,
+          {
+            headers: {
+              apikey: SUPABASE_KEY,
+              Authorization: `Bearer ${SUPABASE_KEY}`
+            }
+          }
+        );
+
+        if (!response.ok) {
+          throw new Error("No se pudieron consultar los asientos.");
+        }
+
+        const data = await response.json();
+        data.forEach(item => occupied.add(Number(item.asiento_numero)));
+
+      } catch (error) {
+        console.error("Error de conexión con Supabase:", error);
+        alert("No se pudieron cargar los asientos ocupados. Intenta nuevamente más tarde.");
       }
     }
 
+    function renderSeats() {
+      seats.innerHTML = "";
+
+      for (let row = 0; row < 12; row++) {
+        const left = [row * 4 + 1, row * 4 + 2];
+        const right = [row * 4 + 3, row * 4 + 4];
+
+        if (row === 11) {
+          left.splice(0, 2, 45, 46);
+          right.splice(0, 2);
+        }
+
+        [...left, ...right].forEach(number => {
+          if (number > 46) return;
+
+          const button = document.createElement("button");
+          button.className = "seat";
+          button.textContent = number;
+          button.type = "button";
+
+          if (occupied.has(number)) {
+            button.classList.add("occupied");
+          }
+
+          button.onclick = () => {
+            if (occupied.has(number)) return;
+
+            if (selected.has(number)) {
+              selected.delete(number);
+              button.classList.remove("selected");
+            } else {
+              selected.add(number);
+              button.classList.add("selected");
+            }
+
+            updateSummary();
+          };
+
+          seats.appendChild(button);
+        });
+
+        if (row !== 11) {
+          const aisle = document.createElement("div");
+          aisle.className = "aisle";
+          aisle.textContent = "PASILLO";
+          seats.appendChild(aisle);
+        }
+      }
+
+      updateSummary();
+    }
+
     function updateSummary() {
-      const numbers = [...selected].sort((a,b) => a-b);
+      const numbers = [...selected].sort((a, b) => a - b);
+
       document.getElementById("summary").textContent =
-        "Asientos seleccionados: " + (numbers.length ? numbers.join(", ") : "ninguno");
+        "Asientos seleccionados: " +
+        (numbers.length ? numbers.join(", ") : "ninguno");
     }
 
     function sendReservation() {
       const name = document.getElementById("name").value.trim();
       const rut = document.getElementById("rut").value.trim();
       const phone = document.getElementById("phone").value.trim();
-      const numbers = [...selected].sort((a,b) => a-b);
+      const numbers = [...selected].sort((a, b) => a - b);
 
       if (!name || !rut || !phone || numbers.length === 0) {
         alert("Completa tus datos y selecciona al menos un asiento.");
         return;
       }
 
-      const message = `Hola, quiero solicitar una reserva en Buses Rivas.%0ANombre: ${encodeURIComponent(name)}%0ARUT: ${encodeURIComponent(rut)}%0ATeléfono: ${encodeURIComponent(phone)}%0AAsientos: ${numbers.join(", ")}`;
-      window.open("https://wa.me/56997862264?text=" + message, "_blank");
+      const message =
+        `Hola, quiero solicitar una reserva en Buses Rivas.\n` +
+        `Nombre: ${name}\nRUT: ${rut}\nTeléfono: ${phone}\n` +
+        `Asientos: ${numbers.join(", ")}`;
+
+      window.open(
+        "https://wa.me/56997862264?text=" + encodeURIComponent(message),
+        "_blank"
+      );
     }
-  </script>
+
+    async function init() {
+      await loadOccupiedSeats();
+      renderSeats();
+    }
+
+    init();
+</script>
 </body>
 </html>
