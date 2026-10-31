@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Buses Rivas | Reservas</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f4f4;
+      color: #222;
+    }
+    header {
+      background: #171717;
+      color: white;
+      padding: 24px 16px;
+      text-align: center;
+      border-bottom: 6px solid #e5b900;
+    }
+    header h1 { margin: 0; color: #ffcc00; font-size: 30px; }
+    header p { margin-bottom: 0; }
+    main { max-width: 900px; margin: 25px auto; padding: 0 15px; }
+    .panel {
+      background: white;
+      border-radius: 12px;
+      padding: 22px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 10px #00000012;
+    }
+    h2 { margin-top: 0; color: #bd1717; }
+    .trip {
+      background: #fff5d0;
+      border-left: 5px solid #e5b900;
+      padding: 15px;
+      border-radius: 8px;
+    }
+    .seats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 9px;
+      max-width: 430px;
+      margin: 20px auto;
+    }
+    .seat {
+      padding: 13px 3px;
+      border: 0;
+      border-radius: 7px;
+      background: #d8f0dc;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .seat.selected { background: #ffcc00; }
+    .seat.occupied { background: #d5d5d5; cursor: not-allowed; }
+    .aisle { grid-column: span 4; text-align: center; color: #777; padding: 5px; }
+    label { display: block; margin-top: 12px; font-weight: bold; }
+    input {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 7px;
+      margin-top: 5px;
+    }
+    .reserve {
+      width: 100%;
+      padding: 15px;
+      margin-top: 18px;
+      border: 0;
+      border-radius: 8px;
+      background: #bd1717;
+      color: white;
+      font-size: 17px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .note { color: #666; font-size: 13px; }
+    footer { text-align: center; padding: 22px; background: #171717; color: white; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>BUSES RIVAS</h1>
+    <p>Viajes en la Araucanía</p>
+  </header>
+
+  <main>
+    <section class="panel">
+      <h2>Próximo viaje</h2>
+      <div class="trip">
+        <h3>Angol → Puerto Saavedra</h3>
+        <p><strong>Fecha:</strong> Domingo 8 de noviembre de 2026</p>
+        <p><strong>Salida:</strong> 07:00 hrs · Plaza de Armas de Angol</p>
+        <p><strong>Valor:</strong> $20.000 por persona</p>
+        <p><strong>Reserva:</strong> Abono de $5.000</p>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Selecciona tus asientos</h2>
+      <p>Verde: disponible · Amarillo: seleccionado · Gris: ocupado</p>
+      <div class="seats" id="seats"></div>
+      <p id="summary">Asientos seleccionados: ninguno</p>
+    </section>
+
+    <section class="panel">
+      <h2>Datos del pasajero</h2>
+      <label>Nombre completo</label>
+      <input id="name" placeholder="Escribe tu nombre">
+      <label>RUT</label>
+      <input id="rut" placeholder="12.345.678-9">
+      <label>Teléfono</label>
+      <input id="phone" placeholder="+56 9">
+      <button class="reserve" onclick="sendReservation()">Solicitar reserva por WhatsApp</button>
+      <p class="note">La solicitud debe ser confirmada por Buses Rivas. Este formulario todavía no procesa pagos ni bloquea asientos automáticamente.</p>
+    </section>
+  </main>
+
+  <footer>
+    Buses Rivas · Angol, Región de La Araucanía
+  </footer>
+
+  <script>
+    const selected = new Set();
+    const occupied = new Set();
+    const seats = document.getElementById("seats");
+
+    // 46 asientos distribuidos en dos lados, con pasillo central.
+    for (let row = 0; row < 12; row++) {
+      const left = [row * 4 + 1, row * 4 + 2];
+      const right = [row * 4 + 3, row * 4 + 4];
+
+      if (row === 11) {
+        left.splice(0, 2, 45, 46);
+        right.splice(0, 2);
+      }
+
+      [...left, ...right].forEach(number => {
+        if (number > 46) return;
+        const button = document.createElement("button");
+        button.className = "seat";
+        button.textContent = number;
+        button.type = "button";
+
+        if (occupied.has(number)) button.classList.add("occupied");
+
+        button.onclick = () => {
+          if (occupied.has(number)) return;
+          if (selected.has(number)) {
+            selected.delete(number);
+            button.classList.remove("selected");
+          } else {
+            selected.add(number);
+            button.classList.add("selected");
+          }
+          updateSummary();
+        };
+
+        seats.appendChild(button);
+      });
+
+      if (row !== 11) {
+        const aisle = document.createElement("div");
+        aisle.className = "aisle";
+        aisle.textContent = "PASILLO";
+        seats.appendChild(aisle);
+      }
+    }
+
+    function updateSummary() {
+      const numbers = [...selected].sort((a,b) => a-b);
+      document.getElementById("summary").textContent =
+        "Asientos seleccionados: " + (numbers.length ? numbers.join(", ") : "ninguno");
+    }
+
+    function sendReservation() {
+      const name = document.getElementById("name").value.trim();
+      const rut = document.getElementById("rut").value.trim();
+      const phone = document.getElementById("phone").value.trim();
+      const numbers = [...selected].sort((a,b) => a-b);
+
+      if (!name || !rut || !phone || numbers.length === 0) {
+        alert("Completa tus datos y selecciona al menos un asiento.");
+        return;
+      }
+
+      const message = `Hola, quiero solicitar una reserva en Buses Rivas.%0ANombre: ${encodeURIComponent(name)}%0ARUT: ${encodeURIComponent(rut)}%0ATeléfono: ${encodeURIComponent(phone)}%0AAsientos: ${numbers.join(", ")}`;
+      window.open("https://wa.me/56997862264?text=" + message, "_blank");
+    }
+  </script>
+</body>
+</html>
