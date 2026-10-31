@@ -475,6 +475,35 @@ async function crearViaje() {
     });
 
     list.appendChild(card);
+    if (viaje.activo) {
+  const button = document.createElement("button");
+  button.textContent = "Desactivar viaje";
+  button.className = "reserve";
+
+  button.onclick = async () => {
+    if (!confirm(
+      "¿Seguro que deseas desactivar este viaje?"
+    )) return;
+
+    button.disabled = true;
+
+    const { error } = await supabaseClient.rpc(
+      "desactivar_viaje",
+      { p_viaje_id: viaje.id }
+    );
+
+    if (error) {
+      alert("Error al desactivar: " + error.message);
+      button.disabled = false;
+      return;
+    }
+
+    alert("Viaje desactivado correctamente.");
+    await loadAdminTrips();
+  };
+
+  card.appendChild(button);
+}
   });
 }
  async function loadAdminReservations() {
