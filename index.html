@@ -529,6 +529,35 @@ editButton.onclick = async () => {
 };
 
 card.appendChild(editButton);
+    const deleteButton = document.createElement("button");
+deleteButton.textContent = "Eliminar viaje";
+deleteButton.className = "reserve";
+deleteButton.style.background = "#b00020";
+deleteButton.style.marginLeft = "8px";
+
+deleteButton.onclick = async () => {
+  if (!confirm(
+    "¿Estás seguro de eliminar este viaje? Esta acción no se puede deshacer."
+  )) return;
+
+  deleteButton.disabled = true;
+
+  const { error } = await supabaseClient.rpc(
+    "eliminar_viaje",
+    { p_viaje_id: viaje.id }
+  );
+
+  if (error) {
+    alert("No se pudo eliminar: " + error.message);
+    deleteButton.disabled = false;
+    return;
+  }
+
+  alert("Viaje eliminado correctamente.");
+  await loadAdminTrips();
+};
+
+card.appendChild(deleteButton);
     if (viaje.activo) {
   const button = document.createElement("button");
   button.textContent = "Desactivar viaje";
