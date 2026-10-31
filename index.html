@@ -504,6 +504,33 @@ async function crearViaje() {
 
   card.appendChild(button);
 }
+    if (!viaje.activo) {
+  const button = document.createElement("button");
+  button.textContent = "Activar viaje";
+  button.className = "reserve";
+
+  button.onclick = async () => {
+    if (!confirm("¿Deseas activar este viaje?")) return;
+
+    button.disabled = true;
+
+    const { error } = await supabaseClient.rpc(
+      "activar_viaje",
+      { p_viaje_id: viaje.id }
+    );
+
+    if (error) {
+      alert("Error al activar: " + error.message);
+      button.disabled = false;
+      return;
+    }
+
+    alert("Viaje activado correctamente.");
+    await loadAdminTrips();
+  };
+
+  card.appendChild(button);
+}
   });
 }
  async function loadAdminReservations() {
