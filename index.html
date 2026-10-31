@@ -475,6 +475,60 @@ async function crearViaje() {
     });
 
     list.appendChild(card);
+    const editButton = document.createElement("button");
+editButton.textContent = "Editar viaje";
+editButton.className = "reserve";
+editButton.style.marginBottom = "10px";
+
+editButton.onclick = async () => {
+  const destino = prompt("Destino:", viaje.destino);
+  if (destino === null) return;
+
+  const fecha = prompt("Fecha (AAAA-MM-DD):", viaje.fecha);
+  if (fecha === null) return;
+
+  const hora = prompt("Hora (HH:MM):", viaje.hora.substring(0, 5));
+  if (hora === null) return;
+
+  const precioTexto = prompt("Valor del pasaje:", viaje.valor_pasaje);
+  if (precioTexto === null) return;
+
+  const abonoTexto = prompt("Monto del abono:", viaje.monto_abono || 0);
+  if (abonoTexto === null) return;
+
+  const precio = Number(precioTexto);
+  const abono = Number(abonoTexto);
+
+  if (!destino.trim() || !fecha || !hora ||
+      !Number.isInteger(precio) || precio < 0 ||
+      !Number.isInteger(abono) || abono < 0 ||
+      abono > precio) {
+    alert("Revisa los datos ingresados.");
+    return;
+  }
+
+  editButton.disabled = true;
+
+  const { error } = await supabaseClient.rpc("editar_viaje", {
+    p_viaje_id: viaje.id,
+    p_destino: destino.trim(),
+    p_fecha: fecha,
+    p_hora: hora,
+    p_valor_pasaje: precio,
+    p_monto_abono: abono
+  });
+
+  if (error) {
+    alert("Error al editar: " + error.message);
+    editButton.disabled = false;
+    return;
+  }
+
+  alert("¡Viaje actualizado correctamente!");
+  await loadAdminTrips();
+};
+
+card.appendChild(editButton);
     if (viaje.activo) {
   const button = document.createElement("button");
   button.textContent = "Desactivar viaje";
@@ -502,7 +556,7 @@ async function crearViaje() {
     await loadAdminTrips();
   };
 
-  card.appendChild(button);
+ card.appendChild(button);
 }
     if (!viaje.activo) {
   const button = document.createElement("button");
@@ -532,7 +586,7 @@ async function crearViaje() {
   card.appendChild(button);
 }
   });
-}
+} 
  async function loadAdminReservations() {
   const list = document.getElementById("reservationsList");
   list.textContent = "Cargando reservas...";
