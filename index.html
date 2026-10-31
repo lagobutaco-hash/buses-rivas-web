@@ -369,25 +369,36 @@ async function loadAdminReservations() {
     return;
   }
 
-  if (!data.length) {
+  list.replaceChildren();
+
+  if (!data || data.length === 0) {
     list.textContent = "Todavía no hay reservas.";
     return;
   }
 
-  list.innerHTML = data.map(reserva => `
-    <div class="trip" style="margin-bottom:12px">
-      <strong>${reserva.nombre_completo}</strong>
-      <p>RUT: ${reserva.rut}</p>
-      <p>Teléfono: ${reserva.telefono}</p>
-      <p>Asientos: ${
-        (reserva.asientos_reservados || [])
-          .map(a => a.asiento_numero).join(", ")
-      }</p>
-      <p>Estado: ${reserva.estado}</p>
-    </div>
-  `).join("");
-}
+  data.forEach(reserva => {
+    const card = document.createElement("div");
+    card.className = "trip";
+    card.style.marginBottom = "12px";
 
+    const fields = [
+      ["Pasajero", reserva.nombre_completo],
+      ["RUT", reserva.rut],
+      ["Teléfono", reserva.telefono],
+      ["Asientos", (reserva.asientos_reservados || [])
+        .map(a => a.asiento_numero).join(", ")],
+      ["Estado", reserva.estado]
+    ];
+
+    fields.forEach(([label, value]) => {
+      const p = document.createElement("p");
+      p.textContent = `${label}: ${value ?? ""}`;
+      card.appendChild(p);
+    });
+
+    list.appendChild(card);
+  });
+}
 async function adminLogout() {
   await supabaseClient.auth.signOut();
 
