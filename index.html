@@ -619,7 +619,19 @@ card.appendChild(deleteButton);
  async function loadAdminReservations() {
   const list = document.getElementById("reservationsList");
   list.textContent = "Cargando reservas...";
+let searchBox = document.getElementById("buscarReservas");
 
+if (!searchBox) {
+  searchBox = document.createElement("input");
+  searchBox.type = "text";
+  searchBox.placeholder = "Buscar por nombre, RUT o asiento...";
+  searchBox.id = "buscarReservas";
+  searchBox.style.width = "100%";
+  searchBox.style.padding = "12px";
+  searchBox.style.marginBottom = "15px";
+
+  list.parentNode.insertBefore(searchBox, list);
+}
   const { data, error } = await supabaseClient
     .from("reservas")
     .select(`
@@ -656,7 +668,23 @@ document.getElementById("reservasCanceladas").textContent =
     return;
   }
 
-  data.forEach(reserva => {
+  const termino = searchBox.value.trim().toLowerCase();
+
+const reservasFiltradas = data.filter(reserva => {
+  const nombre = (reserva.nombre_completo || "").toLowerCase();
+  const rut = (reserva.rut || "").toLowerCase();
+
+  const asientos = (reserva.asientos_reservados || [])
+    .map(a => String(a.asiento_numero))
+    .join(" ");
+
+  return nombre.includes(termino) ||
+         rut.includes(termino) ||
+         asientos.includes(termino);
+});
+
+reservasFiltradas.forEach(reserva => {
+  
     const card = document.createElement("div");
     card.className = "trip";
     card.style.marginBottom = "12px";
@@ -736,6 +764,7 @@ document.getElementById("reservasCanceladas").textContent =
 
     list.appendChild(card);
   });
+   searchBox.oninput = () => loadAdminReservations();
 }
 async function adminLogout() {
   await supabaseClient.auth.signOut();
