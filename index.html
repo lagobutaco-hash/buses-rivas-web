@@ -115,15 +115,47 @@
       <p class="note">La solicitud debe ser confirmada por Buses Rivas. Este formulario todavía no procesa pagos ni bloquea asientos automáticamente.</p>
     </section>
   </main>
+  <section class="panel" id="adminPanel">
+    <h2>Administración Buses Rivas</h2>
 
+    <div id="adminLogin">
+      <p>Acceso exclusivo para el administrador</p>
+
+      <label>Correo electrónico</label>
+      <input id="adminEmail" type="email"
+        placeholder="Tu correo">
+
+      <label>Contraseña</label>
+      <input id="adminPassword" type="password"
+        placeholder="Tu contraseña">
+
+      <button class="reserve" onclick="adminLogin()">
+        Ingresar al panel
+      </button>
+    </div>
+
+    <div id="adminContent" style="display:none">
+      <h3>Reservas registradas</h3>
+      <div id="reservationsList">
+        Cargando reservas...
+      </div>
+
+      <button class="reserve" onclick="adminLogout()">
+        Cerrar sesión
+      </button>
+    </div>
+  </section>
   <footer>
     Buses Rivas · Angol, Región de La Araucanía
   </footer>
-
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
  <script>
     const SUPABASE_URL = "https://qhncnbqktcfjpolhfjxl.supabase.co";
     const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFobmNuYnFrdGNmanBvbGhmanhsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTM0MDgyMjcsImV4cCI6MjEwODk4NDIyN30.DRW5Ylapc1RvLmk6Jr2sZsOiz1e_W_qBY7M7DPuthmw";
-
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
     const selected = new Set();
     const occupied = new Set();
     const seats = document.getElementById("seats");
@@ -289,7 +321,79 @@
     alert("No se pudo registrar la reserva: " + error.message);
   }
 }
+async function adminLogin() {
+  const email = document.getElementById("adminEmail").value.trim();
+  const password = document.getElementById("adminPassword").value;
 
+  if (!email || !password) {
+    alert("Ingresa tu correo y contraseña.");
+    return;
+  }
+
+  const { data, error } = await supabaseClient.auth.signInWithPassword({
+    email,
+    password
+  });
+
+  if (error) {
+    alert("No se pudo iniciar sesión: " + error.message);
+    return;
+  }
+
+  document.getElementById("adminLogin").style.display = "none";
+  document.getElementById("adminContent").style.display = "block";
+
+  await loadAdminReservations();
+}
+
+async function loadAdminReservations() {
+  const list = document.getElementById("reservationsList");
+  list.textContent = "Cargando reservas...";
+
+  const { data, error } = await supabaseClient
+    .from("reservas")
+    .select(`
+      id,
+      viaje_id,
+      nombre_completo,
+      rut,
+      telefono,
+      estado,
+      created_at,
+      asientos_reservados(asiento_numero)
+    `)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    list.textContent = "Error al consultar reservas: " + error.message;
+    return;
+  }
+
+  if (!data.length) {
+    list.textContent = "Todavía no hay reservas.";
+    return;
+  }
+
+  list.innerHTML = data.map(reserva => `
+    <div class="trip" style="margin-bottom:12px">
+      <strong>${reserva.nombre_completo}</strong>
+      <p>RUT: ${reserva.rut}</p>
+      <p>Teléfono: ${reserva.telefono}</p>
+      <p>Asientos: ${
+        (reserva.asientos_reservados || [])
+          .map(a => a.asiento_numero).join(", ")
+      }</p>
+      <p>Estado: ${reserva.estado}</p>
+    </div>
+  `).join("");
+}
+
+async function adminLogout() {
+  await supabaseClient.auth.signOut();
+
+  document.getElementById("adminContent").style.display = "none";
+  document.getElementById("adminLogin").style.display = "block";
+}
     async function init() {
       await loadOccupiedSeats();
       renderSeats();
