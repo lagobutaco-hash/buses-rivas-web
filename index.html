@@ -135,7 +135,16 @@
     </div>
 
     <div id="adminContent" style="display:none">
-      <h3>Reservas registradas</h3>
+     <h3>Resumen de reservas</h3>
+
+<div class="trip" style="margin-bottom:15px">
+  <p>Total de reservas: <strong id="totalReservas">0</strong></p>
+  <p>Pendientes: <strong id="reservasPendientes">0</strong></p>
+  <p>Confirmadas: <strong id="reservasConfirmadas">0</strong></p>
+  <p>Canceladas: <strong id="reservasCanceladas">0</strong></p>
+</div>
+
+<h3>Reservas registradas</h3>
       <div id="reservationsList">
         Cargando reservas...
       </div>
@@ -368,7 +377,17 @@ async function adminLogin() {
     list.textContent = "Error al consultar reservas: " + error.message;
     return;
   }
+// Actualizar resumen de reservas
+document.getElementById("totalReservas").textContent = data.length;
 
+document.getElementById("reservasPendientes").textContent =
+  data.filter(r => r.estado === "pendiente").length;
+
+document.getElementById("reservasConfirmadas").textContent =
+  data.filter(r => r.estado === "confirmada").length;
+
+document.getElementById("reservasCanceladas").textContent =
+  data.filter(r => r.estado === "cancelada").length;
   list.replaceChildren();
 
   if (!data || data.length === 0) {
