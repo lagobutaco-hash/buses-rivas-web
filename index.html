@@ -135,6 +135,29 @@
     </div>
 
     <div id="adminContent" style="display:none">
+      <h3>Crear nuevo viaje</h3>
+
+<div class="trip">
+  <label>Destino</label>
+  <input type="text" id="nuevoDestino" placeholder="Ej: Puerto Saavedra">
+
+  <label>Fecha</label>
+  <input type="date" id="nuevaFecha">
+
+  <label>Hora de salida</label>
+  <input type="time" id="nuevaHora">
+
+  <label>Valor del pasaje (CLP)</label>
+  <input type="number" id="nuevoPrecio" min="0" placeholder="Ej: 20000">
+
+  <label>Abono (CLP)</label>
+  <input type="number" id="nuevoAbono" min="0" placeholder="Ej: 5000">
+
+  <button class="reserve" onclick="crearViaje()">
+    Guardar nuevo viaje
+  </button>
+  <p id="mensajeViaje"></p>
+</div>
      <h3>Resumen de reservas</h3>
 
 <div class="trip" style="margin-bottom:15px">
