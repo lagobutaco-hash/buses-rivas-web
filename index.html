@@ -687,15 +687,16 @@ if (!searchBox) {
   const { data, error } = await supabaseClient
     .from("reservas")
     .select(`
-      id,
-      viaje_id,
-      nombre_completo,
-      rut,
-      telefono,
-      estado,
-      created_at,
-      asientos_reservados(asiento_numero)
-    `)
+  id,
+  viaje_id,
+  nombre_completo,
+  rut,
+  telefono,
+  estado,
+  created_at,
+  viajes(destino, fecha, hora),
+  asientos_reservados(asiento_numero)
+`)
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -741,14 +742,17 @@ reservasFiltradas.forEach(reserva => {
     card.className = "trip";
     card.style.marginBottom = "12px";
 
-    const fields = [
-      ["Pasajero", reserva.nombre_completo],
-      ["RUT", reserva.rut],
-      ["Teléfono", reserva.telefono],
-      ["Asientos", (reserva.asientos_reservados || [])
-        .map(a => a.asiento_numero).join(", ")],
-      ["Estado", reserva.estado]
-    ];
+   const fields = [
+  ["Pasajero", reserva.nombre_completo],
+  ["RUT", reserva.rut],
+  ["Teléfono", reserva.telefono],
+  ["Destino", reserva.viajes?.destino || "No disponible"],
+  ["Fecha", reserva.viajes?.fecha || "No disponible"],
+  ["Hora", reserva.viajes?.hora || "No disponible"],
+  ["Asientos", (reserva.asientos_reservados || [])
+    .map(a => a.asiento_numero).join(", ")],
+  ["Estado", reserva.estado]
+];
 
     fields.forEach(([label, value]) => {
       const p = document.createElement("p");
