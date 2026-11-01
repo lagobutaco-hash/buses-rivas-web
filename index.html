@@ -179,7 +179,10 @@
 <select id="filtroViaje" style="width:100%; padding:12px; margin-bottom:15px;">
   <option value="">Todos los viajes</option>
 </select>
-
+<button class="reserve" onclick="exportarReservasExcel()"
+  style="width:100%; margin-bottom:15px;">
+  Exportar reservas a Excel
+</button>
 <div id="reservationsList">
   Cargando reservas...
 </div>
@@ -915,6 +918,74 @@ reservasFiltradas.forEach(reserva => {
   });
    searchBox.oninput = () => loadAdminReservations();
    filtroViaje.onchange = () => loadAdminReservations();
+}
+   async function exportarReservasExcel() {
+  const filtroViaje = document.getElementById("filtroViaje");
+  const viajeSeleccionado = filtroViaje ? filtroViaje.value : "";
+
+  const { data, error } = await supabaseClient
+    .from("reservas")
+    .select(`
+      nombre_completo,
+      rut,
+      telefono,
+      estado,
+      viaje_id,
+      viajes(destino, fecha, hora),
+      asientos_reservados(asiento_numero)
+    `)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    alert("Error al exportar: " + error.message);
+    return;
+  }
+
+  const reservas = data.filter(reserva =>
+    !viajeSeleccionado ||
+    String(reserva.viaje_id) === viajeSeleccionado
+  );
+
+  if (reservas.length === 0) {
+    alert("No hay reservas para exportar.");
+    return;
+  }
+
+  const filas = [
+    ["Pasajero", "RUT", "Teléfono", "Destino", "Fecha",
+     "Hora", "Asientos", "Estado"]
+  ];
+
+  reservas.forEach(reserva => {
+    filas.push([
+      reserva.nombre_completo || "",
+      reserva.rut || "",
+      reserva.telefono || "",
+      reserva.viajes?.destino || "",
+      reserva.viajes?.fecha || "",
+      reserva.viajes?.hora || "",
+      (reserva.asientos_reservados || [])
+        .map(a => a.asiento_numero).join(", "),
+      reserva.estado || ""
+    ]);
+  });
+
+  const contenido = "\uFEFF" + filas.map(fila =>
+    fila.map(valor =>
+      '"' + String(valor).replace(/"/g, '""') + '"'
+    ).join(";")
+  ).join("\r\n");
+
+  const archivo = new Blob([contenido], {
+    type: "text/csv;charset=utf-8;"
+  });
+
+  const enlace = document.createElement("a");
+  enlace.href = URL.createObjectURL(archivo);
+  enlace.download = "reservas_buses_rivas.csv";
+  enlace.click();
+
+  URL.revokeObjectURL(enlace.href);
 }
 async function adminLogout() {
   await supabaseClient.auth.signOut();
