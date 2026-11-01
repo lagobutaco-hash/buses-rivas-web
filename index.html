@@ -183,6 +183,10 @@
   style="width:100%; margin-bottom:15px;">
   Exportar reservas a Excel
 </button>
+      <button class="reserve" onclick="imprimirListaViaje()"
+  style="width:100%; margin-bottom:15px; background:#222;">
+  Imprimir lista de pasajeros
+</button>
 <div id="reservationsList">
   Cargando reservas...
 </div>
@@ -986,6 +990,114 @@ reservasFiltradas.forEach(reserva => {
   enlace.click();
 
   URL.revokeObjectURL(enlace.href);
+}
+   async function imprimirListaViaje() {
+  const ventana = window.open("", "_blank");
+
+  if (!ventana) {
+    alert("Permite las ventanas emergentes para imprimir.");
+    return;
+  }
+
+  const filtro = document.getElementById("filtroViaje");
+  const viajeSeleccionado = filtro.value;
+
+  if (!viajeSeleccionado) {
+    ventana.close();
+    alert("Primero selecciona un viaje en el filtro.");
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("reservas")
+    .select(`
+      nombre_completo,
+      telefono,
+      estado,
+      viaje_id,
+      viajes(destino, fecha, hora),
+      asientos_reservados(asiento_numero)
+    `)
+    .eq("viaje_id", viajeSeleccionado)
+    .order("created_at", { ascending: true });
+
+  if (error) {
+    ventana.close();
+    alert("Error al preparar la lista: " + error.message);
+    return;
+  }
+
+  const reservas = data.filter(r =>
+    r.estado === "pendiente" || r.estado === "confirmada"
+  );
+
+  if (reservas.length === 0) {
+    ventana.close();
+    alert("Este viaje no tiene pasajeros registrados.");
+    return;
+  }
+
+  const viaje = reservas[0].viajes;
+  const escapar = texto => String(texto ?? "").replace(/[&<>"']/g, c => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[c]);
+
+  const filas = reservas.flatMap(r =>
+    (r.asientos_reservados || []).map(a => `
+      <tr>
+        <td>${escapar(a.asiento_numero)}</td>
+        <td>${escapar(r.nombre_completo)}</td>
+        <td>${escapar(r.telefono)}</td>
+        <td>${escapar(r.estado)}</td>
+      </tr>
+    `)
+  );
+
+  ventana.document.write(`
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <title>Lista de pasajeros - Buses Rivas</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 25px; color: #222; }
+        h1 { color: #b5121b; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #999; padding: 9px; text-align: left; }
+        th { background: #f2c500; }
+        .datos { margin: 8px 0; }
+        @media print { button { display: none; } }
+      </style>
+    </head>
+    <body>
+      <h1>Buses Rivas</h1>
+      <h2>Lista de pasajeros</h2>
+      <p class="datos"><strong>Destino:</strong> ${escapar(viaje.destino)}</p>
+      <p class="datos"><strong>Fecha:</strong> ${escapar(viaje.fecha)}</p>
+      <p class="datos"><strong>Salida:</strong> ${escapar(viaje.hora)}</p>
+      <p class="datos"><strong>Total de pasajeros:</strong> ${filas.length}</p>
+      <table>
+        <thead>
+          <tr>
+            <th>Asiento</th>
+            <th>Pasajero</th>
+            <th>Teléfono</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody>${filas.join("")}</tbody>
+      </table>
+      <p><strong>Buses Rivas · Angol, Región de La Araucanía</strong></p>
+      <button onclick="window.print()">Imprimir</button>
+    </body>
+    </html>
+  `);
+
+  ventana.document.close();
 }
 async function adminLogout() {
   await supabaseClient.auth.signOut();
