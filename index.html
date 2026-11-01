@@ -1012,6 +1012,7 @@ reservasFiltradas.forEach(reserva => {
     .from("reservas")
     .select(`
       nombre_completo,
+      rut,
       telefono,
       estado,
       viaje_id,
@@ -1051,6 +1052,7 @@ reservasFiltradas.forEach(reserva => {
       <tr>
         <td>${escapar(a.asiento_numero)}</td>
         <td>${escapar(r.nombre_completo)}</td>
+        <td>${escapar(r.rut)}</td>
         <td>${escapar(r.telefono)}</td>
         <td>${escapar(r.estado)}</td>
       </tr>
