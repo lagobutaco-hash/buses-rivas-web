@@ -171,9 +171,14 @@
 </div>
 
 <h3>Reservas registradas</h3>
-      <div id="reservationsList">
-        Cargando reservas...
-      </div>
+
+<select id="filtroViaje" style="width:100%; padding:12px; margin-bottom:15px;">
+  <option value="">Todos los viajes</option>
+</select>
+
+<div id="reservationsList">
+  Cargando reservas...
+</div>
 
       <button class="reserve" onclick="adminLogout()">
         Cerrar sesión
@@ -722,7 +727,34 @@ document.getElementById("reservasCanceladas").textContent =
   }
 
   const termino = searchBox.value.trim().toLowerCase();
+const filtroViaje = document.getElementById("filtroViaje");
+const viajeSeleccionado = filtroViaje ? filtroViaje.value : "";
+   if (filtroViaje) {
+  const valorActual = filtroViaje.value;
 
+  filtroViaje.innerHTML =
+    '<option value="">Todos los viajes</option>';
+
+  const viajesUnicos = new Map();
+
+  data.forEach(reserva => {
+    if (reserva.viajes && reserva.viaje_id) {
+      viajesUnicos.set(
+        String(reserva.viaje_id),
+        `${reserva.viajes.destino} - ${reserva.viajes.fecha}`
+      );
+    }
+  });
+
+  viajesUnicos.forEach((nombre, id) => {
+    const opcion = document.createElement("option");
+    opcion.value = id;
+    opcion.textContent = nombre;
+    filtroViaje.appendChild(opcion);
+  });
+
+  filtroViaje.value = valorActual;
+}
 const reservasFiltradas = data.filter(reserva => {
   const nombre = (reserva.nombre_completo || "").toLowerCase();
   const rut = (reserva.rut || "").toLowerCase();
@@ -731,9 +763,16 @@ const reservasFiltradas = data.filter(reserva => {
     .map(a => String(a.asiento_numero))
     .join(" ");
 
-  return nombre.includes(termino) ||
-         rut.includes(termino) ||
-         asientos.includes(termino);
+  const coincideBusqueda =
+  nombre.includes(termino) ||
+  rut.includes(termino) ||
+  asientos.includes(termino);
+
+const coincideViaje =
+  !viajeSeleccionado ||
+  String(reserva.viaje_id) === viajeSeleccionado;
+
+return coincideBusqueda && coincideViaje;
 });
 
 reservasFiltradas.forEach(reserva => {
@@ -821,6 +860,7 @@ reservasFiltradas.forEach(reserva => {
     list.appendChild(card);
   });
    searchBox.oninput = () => loadAdminReservations();
+   filtroViaje.onchange = () => loadAdminReservations();
 }
 async function adminLogout() {
   await supabaseClient.auth.signOut();
