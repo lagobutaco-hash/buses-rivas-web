@@ -169,7 +169,11 @@
   <p>Confirmadas: <strong id="reservasConfirmadas">0</strong></p>
   <p>Canceladas: <strong id="reservasCanceladas">0</strong></p>
 </div>
+<h3>Pasajeros y asientos por viaje</h3>
 
+<div id="resumenPorViaje">
+  Calculando pasajeros y asientos...
+</div>
 <h3>Reservas registradas</h3>
 
 <select id="filtroViaje" style="width:100%; padding:12px; margin-bottom:15px;">
@@ -716,7 +720,57 @@ document.getElementById("reservasPendientes").textContent =
 
 document.getElementById("reservasConfirmadas").textContent =
   data.filter(r => r.estado === "confirmada").length;
+// Resumen de pasajeros y asientos por viaje
+const resumenViaje = document.getElementById("resumenPorViaje");
+const grupos = new Map();
 
+data
+  .filter(r => r.estado === "pendiente" || r.estado === "confirmada")
+  .forEach(reserva => {
+    const viaje = reserva.viajes;
+    if (!viaje) return;
+
+    const id = String(reserva.viaje_id);
+
+    if (!grupos.has(id)) {
+      grupos.set(id, {
+        destino: viaje.destino,
+        fecha: viaje.fecha,
+        pasajeros: 0,
+        asientos: 0
+      });
+    }
+
+    const grupo = grupos.get(id);
+    grupo.pasajeros += 1;
+    grupo.asientos += (reserva.asientos_reservados || []).length;
+  });
+
+resumenViaje.replaceChildren();
+
+if (grupos.size === 0) {
+  resumenViaje.textContent = "No hay reservas activas.";
+} else {
+  grupos.forEach(viaje => {
+    const tarjeta = document.createElement("div");
+    tarjeta.className = "trip";
+    tarjeta.style.marginBottom = "12px";
+
+    const titulo = document.createElement("h4");
+    titulo.textContent = viaje.destino + " - " + viaje.fecha;
+    tarjeta.appendChild(titulo);
+
+    const pasajeros = document.createElement("p");
+    pasajeros.textContent = "Reservas activas: " + viaje.pasajeros;
+    tarjeta.appendChild(pasajeros);
+
+    const asientos = document.createElement("p");
+    asientos.textContent = "Asientos ocupados: " + viaje.asientos + " de 46";
+    tarjeta.appendChild(asientos);
+
+    resumenViaje.appendChild(tarjeta);
+  });
+}
 document.getElementById("reservasCanceladas").textContent =
   data.filter(r => r.estado === "cancelada").length;
   list.replaceChildren();
