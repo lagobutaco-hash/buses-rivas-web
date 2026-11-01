@@ -204,7 +204,7 @@ const supabaseClient = window.supabase.createClient(
     async function loadOccupiedSeats() {
       try {
         const viajesResponse = await fetch(
-          `${SUPABASE_URL}/rest/v1/viajes?destino=eq.Puerto%20Saavedra&fecha=eq.2026-11-08&select=id`,
+          `${SUPABASE_URL}/rest/v1/viajes?destino=eq.Puerto%20Saavedra&fecha=eq.2026-11-08&activo=eq.true&select=id`,
           {
             headers: {
               apikey: SUPABASE_KEY,
