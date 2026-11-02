@@ -429,7 +429,10 @@ viajesDisponibles = viajes;
 
 const valorTotal =
   Number(viajeSeleccionado?.valor_pasaje || 0) * numbers.length;
+const abono =
+  Number(viajeSeleccionado?.monto_abono || 0) * numbers.length;
 
+const saldoPendiente = valorTotal - abono;
 const message =
   `🚌 *BUSES RIVAS - RESERVA DE PASAJE*\n\n` +
   `Hola, quiero confirmar mi reserva.\n\n` +
@@ -441,7 +444,9 @@ const message =
   `RUT: ${rut}\n` +
   `Teléfono: ${phone}\n` +
   `💺 Asiento(s): ${numbers.join(", ")}\n\n` +
-  `💰 Valor total: $${valorTotal.toLocaleString("es-CL")}\n\n` +
+ `💰 Valor total: $${valorTotal.toLocaleString("es-CL")}\n` +
+`💵 Abono solicitado: $${abono.toLocaleString("es-CL")}\n` +
+`📌 Saldo pendiente: $${saldoPendiente.toLocaleString("es-CL")}\n\n` +
   `¡Gracias por preferir Buses Rivas!`;
 
     alert("¡Reserva registrada correctamente!");
