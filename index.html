@@ -750,13 +750,14 @@ data
     const id = String(reserva.viaje_id);
 
     if (!grupos.has(id)) {
-  grupos.set(id, {
-    destino: viaje.destino,
-    fecha: viaje.fecha,
-    confirmados: 0,
-    pendientes: 0,
-    asientos: 0
-  });
+ grupos.set(id, {
+  destino: viaje.destino,
+  fecha: viaje.fecha,
+  valorPasaje: Number(viaje.valor_pasaje || 0),
+  confirmados: 0,
+  pendientes: 0,
+  asientos: 0
+});
 }
 
 const grupo = grupos.get(id);
@@ -799,7 +800,23 @@ tarjeta.appendChild(pendientes);
 const totalPasajeros = document.createElement("p");
 totalPasajeros.textContent = "Total de pasajeros: " + (viaje.confirmados + viaje.pendientes);
 tarjeta.appendChild(totalPasajeros);
+const montoConfirmado = document.createElement("p");
+montoConfirmado.textContent =
+  "Venta de pasajes confirmados: $" +
+  (viaje.confirmados * viaje.valorPasaje).toLocaleString("es-CL");
+tarjeta.appendChild(montoConfirmado);
 
+const montoPendiente = document.createElement("p");
+montoPendiente.textContent =
+  "Valor de reservas pendientes: $" +
+  (viaje.pendientes * viaje.valorPasaje).toLocaleString("es-CL");
+tarjeta.appendChild(montoPendiente);
+
+const totalVenta = document.createElement("p");
+totalVenta.textContent =
+  "Venta potencial total: $" +
+  ((viaje.confirmados + viaje.pendientes) * viaje.valorPasaje).toLocaleString("es-CL");
+tarjeta.appendChild(totalVenta);
    const asientos = document.createElement("p");
 asientos.textContent = "Asientos ocupados: " + viaje.asientos + " de 46";
 tarjeta.appendChild(asientos);
