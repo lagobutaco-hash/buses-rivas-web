@@ -750,18 +750,28 @@ data
     const id = String(reserva.viaje_id);
 
     if (!grupos.has(id)) {
-      grupos.set(id, {
-        destino: viaje.destino,
-        fecha: viaje.fecha,
-        pasajeros: 0,
-        asientos: 0
-      });
-    }
-
-    const grupo = grupos.get(id);
-    grupo.pasajeros += 1;
-    grupo.asientos += (reserva.asientos_reservados || []).length;
+  grupos.set(id, {
+    destino: viaje.destino,
+    fecha: viaje.fecha,
+    confirmados: 0,
+    pendientes: 0,
+    asientos: 0
   });
+}
+
+const grupo = grupos.get(id);
+const cantidadAsientos = (reserva.asientos_reservados || []).length;
+
+if (reserva.estado === "confirmada") {
+  grupo.confirmados += cantidadAsientos;
+}
+
+if (reserva.estado === "pendiente") {
+  grupo.pendientes += cantidadAsientos;
+}
+
+grupo.asientos += cantidadAsientos;
+});
 
 resumenViaje.replaceChildren();
 
@@ -778,8 +788,17 @@ if (grupos.size === 0) {
     tarjeta.appendChild(titulo);
 
     const pasajeros = document.createElement("p");
-    pasajeros.textContent = "Reservas activas: " + viaje.pasajeros;
-    tarjeta.appendChild(pasajeros);
+    const confirmados = document.createElement("p");
+confirmados.textContent = "Pasajeros confirmados: " + viaje.confirmados;
+tarjeta.appendChild(confirmados);
+
+const pendientes = document.createElement("p");
+pendientes.textContent = "Pasajeros pendientes: " + viaje.pendientes;
+tarjeta.appendChild(pendientes);
+
+const totalPasajeros = document.createElement("p");
+totalPasajeros.textContent = "Total de pasajeros: " + (viaje.confirmados + viaje.pendientes);
+tarjeta.appendChild(totalPasajeros);
 
    const asientos = document.createElement("p");
 asientos.textContent = "Asientos ocupados: " + viaje.asientos + " de 46";
