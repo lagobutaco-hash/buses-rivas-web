@@ -1055,18 +1055,23 @@ reservasFiltradas.forEach(reserva => {
     "'": "&#39;"
   })[c]);
 
-  const filas = reservas.flatMap(r =>
-    (r.asientos_reservados || []).map(a => `
-      <tr>
-        <td>${escapar(a.asiento_numero)}</td>
-        <td>${escapar(r.nombre_completo)}</td>
-        <td>${escapar(r.rut)}</td>
-        <td>${escapar(r.telefono)}</td>
-        <td>${escapar(r.estado)}</td>
-      </tr>
-    `)
-  );
-
+ const filas = reservas
+  .flatMap(r =>
+    (r.asientos_reservados || []).map(a => ({
+      numero: Number(a.asiento_numero),
+      html: `
+        <tr>
+          <td>${escapar(a.asiento_numero)}</td>
+          <td>${escapar(r.nombre_completo)}</td>
+          <td>${escapar(r.rut)}</td>
+          <td>${escapar(r.telefono)}</td>
+          <td>${escapar(r.estado)}</td>
+        </tr>
+      `
+    }))
+  )
+  .sort((a, b) => a.numero - b.numero)
+  .map(item => item.html);
   ventana.document.write(`
     <!DOCTYPE html>
     <html lang="es">
