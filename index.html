@@ -711,16 +711,18 @@ if (!searchBox) {
   list.parentNode.insertBefore(searchBox, list);
 }
   const { data, error } = await supabaseClient
-    .from("reservas")
-    .select(`
+   .from("reservas")
+.select(`
   id,
   viaje_id,
   nombre_completo,
   rut,
   telefono,
   estado,
+  monto_pagado,
+  saldo_pendiente,
   created_at,
-  viajes(destino, fecha, hora),
+  viajes(destino, fecha, hora, valor_pasaje),
   asientos_reservados(asiento_numero)
 `)
     .order("created_at", { ascending: false });
@@ -914,7 +916,78 @@ reservasFiltradas.forEach(reserva => {
       p.textContent = `${label}: ${value ?? ""}`;
       card.appendChild(p);
     });
+const valorPasaje =
+  Number(reserva.viajes?.valor_pasaje || 0) *
+  (reserva.asientos_reservados || []).length;
 
+const montoPagado = Number(reserva.monto_pagado || 0);
+
+const saldoPendiente = Math.max(0, valorPasaje - montoPagado);
+
+const pagoInfo = document.createElement("div");
+pagoInfo.style.margin = "12px 0";
+pagoInfo.style.padding = "10px";
+pagoInfo.style.background = "#fff3cd";
+pagoInfo.style.borderRadius = "8px";
+
+pagoInfo.innerHTML = `
+  <p>Valor total: $${valorPasaje.toLocaleString("es-CL")}</p>
+  <p>Pagado: $${montoPagado.toLocaleString("es-CL")}</p>
+  <p>Saldo pendiente: $${saldoPendiente.toLocaleString("es-CL")}</p>
+`;
+
+card.appendChild(pagoInfo);
+  const inputPago = document.createElement("input");
+inputPago.type = "number";
+inputPago.min = "0";
+inputPago.step = "1000";
+inputPago.placeholder = "Ingresar monto recibido";
+inputPago.style.width = "100%";
+inputPago.style.padding = "10px";
+inputPago.style.marginBottom = "8px";
+
+card.appendChild(inputPago);
+
+const botonPago = document.createElement("button");
+botonPago.textContent = "Registrar pago";
+botonPago.style.background = "#198754";
+botonPago.style.color = "white";
+
+botonPago.onclick = async () => {
+  const nuevoPago = Number(inputPago.value);
+
+  if (!Number.isFinite(nuevoPago) || nuevoPago <= 0) {
+    alert("Ingresa un monto válido.");
+    return;
+  }
+
+  const totalPagado = montoPagado + nuevoPago;
+
+  if (totalPagado > valorPasaje) {
+    alert("El pago supera el valor total del pasaje.");
+    return;
+  }
+
+  const nuevoSaldo = valorPasaje - totalPagado;
+
+  const { error } = await supabaseClient
+    .from("reservas")
+    .update({
+      monto_pagado: totalPagado,
+      saldo_pendiente: nuevoSaldo
+    })
+    .eq("id", reserva.id);
+
+  if (error) {
+    alert("Error al registrar el pago: " + error.message);
+    return;
+  }
+
+  alert("Pago registrado correctamente.");
+  await loadAdminReservations();
+};
+
+card.appendChild(botonPago);
     if (reserva.estado === "pendiente") {
       const confirmButton = document.createElement("button");
       confirmButton.textContent = "Confirmar reserva";
