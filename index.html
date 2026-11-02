@@ -193,6 +193,10 @@
   style="width:100%; margin-bottom:15px; background:#222;">
   Imprimir lista de pasajeros
 </button>
+      <button class="reserve" onclick="enviarRecordatoriosViaje()"
+  style="width:100%; margin-bottom:15px; background:#25D366; color:white;">
+  Enviar recordatorios a todos por WhatsApp
+</button>
 <div id="reservationsList">
   Cargando reservas...
 </div>
@@ -1150,6 +1154,126 @@ filtroViaje.onchange = () => loadAdminReservations();
     </html>
   `);
 
+  ventana.document.close();
+}
+   async function enviarRecordatoriosViaje() {
+  const filtro = document.getElementById("filtroViaje");
+  const viajeSeleccionado = filtro.value;
+
+  if (!viajeSeleccionado) {
+    alert("Primero selecciona un viaje.");
+    return;
+  }
+
+  const ventana = window.open("", "_blank");
+
+  if (!ventana) {
+    alert("Permite las ventanas emergentes para continuar.");
+    return;
+  }
+
+  ventana.document.write("<h2>Preparando recordatorios...</h2>");
+
+  const { data, error } = await supabaseClient
+    .from("reservas")
+    .select(`
+      nombre_completo,
+      telefono,
+      estado,
+      viaje_id,
+      viajes(destino, fecha, hora),
+      asientos_reservados(asiento_numero)
+    `)
+    .eq("viaje_id", viajeSeleccionado);
+
+  if (error) {
+    ventana.close();
+    alert("Error al cargar pasajeros: " + error.message);
+    return;
+  }
+
+  const reservas = data.filter(r =>
+    r.estado === "pendiente" || r.estado === "confirmada"
+  );
+
+  if (reservas.length === 0) {
+    ventana.close();
+    alert("No hay pasajeros activos para este viaje.");
+    return;
+  }
+
+  const escapar = texto => String(texto ?? "").replace(/[&<>"']/g, c => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[c]);
+
+  const enlaces = reservas.map(r => {
+    let telefono = String(r.telefono || "").replace(/\D/g, "");
+
+    if (telefono.startsWith("0")) {
+      telefono = telefono.substring(1);
+    }
+
+    if (!telefono.startsWith("56")) {
+      telefono = "56" + telefono;
+    }
+
+    const asientos = (r.asientos_reservados || [])
+      .map(a => a.asiento_numero)
+      .join(", ");
+
+    const viaje = r.viajes || {};
+
+    const mensaje =
+      `Hola ${r.nombre_completo}, te recordamos tu viaje con Buses Rivas.\n` +
+      `Destino: ${viaje.destino || ""}\n` +
+      `Fecha: ${viaje.fecha || ""}\n` +
+      `Salida: ${viaje.hora || ""}\n` +
+      `Asiento(s): ${asientos}\n` +
+      `¡Te esperamos!`;
+
+    const url = "https://wa.me/" + telefono +
+      "?text=" + encodeURIComponent(mensaje);
+
+    return `
+      <li>
+        <strong>${escapar(r.nombre_completo)}</strong>
+        — Asiento(s): ${escapar(asientos)}
+        — Estado: ${escapar(r.estado)}
+        <br>
+        <a href="${escapar(url)}" target="_blank">
+          Abrir WhatsApp y preparar recordatorio
+        </a>
+      </li>
+    `;
+  });
+
+  ventana.document.open();
+  ventana.document.write(`
+    <!DOCTYPE html>
+    <html lang="es">
+    <head>
+      <meta charset="UTF-8">
+      <title>Recordatorios - Buses Rivas</title>
+      <style>
+        body { font-family: Arial; padding: 25px; }
+        h1 { color: #b5121b; }
+        li { margin-bottom: 22px; }
+        a { color: #128c45; font-weight: bold; }
+      </style>
+    </head>
+    <body>
+      <h1>Buses Rivas</h1>
+      <h2>Recordatorios del viaje</h2>
+      <p>Pasajeros: ${enlaces.length}</p>
+      <p>Abre cada enlace para revisar y enviar el mensaje por WhatsApp.</p>
+      <ol>${enlaces.join("")}</ol>
+    </body>
+    </html>
+  `);
   ventana.document.close();
 }
 async function adminLogout() {
