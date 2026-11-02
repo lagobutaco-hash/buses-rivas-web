@@ -222,6 +222,7 @@ const supabaseClient = window.supabase.createClient(
     const seats = document.getElementById("seats");
 
     let viajeId = null;
+   let viajesDisponibles = [];
 async function loadPublicTrips() {
   const container = document.getElementById("publicTrips");
   container.innerHTML = "Cargando viajes...";
@@ -242,7 +243,7 @@ async function loadPublicTrips() {
     }
 
     const viajes = await response.json();
-
+viajesDisponibles = viajes;
     if (!viajes.length) {
       container.innerHTML = "No hay viajes disponibles por el momento.";
       return;
@@ -422,10 +423,26 @@ async function loadPublicTrips() {
       throw new Error(error.message || "No se pudo guardar la reserva.");
     }
 
-    const message =
-      `Hola, quiero confirmar mi reserva en Buses Rivas.\n` +
-      `Nombre: ${name}\nRUT: ${rut}\nTeléfono: ${phone}\n` +
-      `Asientos: ${numbers.join(", ")}`;
+  const viajeSeleccionado = viajesDisponibles.find(
+  v => String(v.id) === String(viajeId)
+);
+
+const valorTotal =
+  Number(viajeSeleccionado?.valor_pasaje || 0) * numbers.length;
+
+const message =
+  `🚌 *BUSES RIVAS - RESERVA DE PASAJE*\n\n` +
+  `Hola, quiero confirmar mi reserva.\n\n` +
+  `📍 Destino: ${viajeSeleccionado?.destino || "No disponible"}\n` +
+  `📅 Fecha: ${viajeSeleccionado?.fecha || "No disponible"}\n` +
+  `🕒 Salida: ${viajeSeleccionado?.hora || "No disponible"}\n` +
+  `📍 Origen: Angol\n\n` +
+  `👤 Pasajero: ${name}\n` +
+  `RUT: ${rut}\n` +
+  `Teléfono: ${phone}\n` +
+  `💺 Asiento(s): ${numbers.join(", ")}\n\n` +
+  `💰 Valor total: $${valorTotal.toLocaleString("es-CL")}\n\n` +
+  `¡Gracias por preferir Buses Rivas!`;
 
     alert("¡Reserva registrada correctamente!");
 
