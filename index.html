@@ -179,6 +179,12 @@
 <select id="filtroViaje" style="width:100%; padding:12px; margin-bottom:15px;">
   <option value="">Todos los viajes</option>
 </select>
+      <input
+  type="text"
+  id="buscarPasajero"
+  placeholder="Buscar pasajero por nombre o RUT..."
+  style="width:100%; padding:12px; margin-bottom:15px; box-sizing:border-box;"
+/>
 <button class="reserve" onclick="exportarReservasExcel()"
   style="width:100%; margin-bottom:15px;">
   Exportar reservas a Excel
@@ -795,7 +801,8 @@ document.getElementById("reservasCanceladas").textContent =
     return;
   }
 
-  const termino = searchBox.value.trim().toLowerCase();
+  const campoBusqueda = document.getElementById("buscarPasajero");
+const termino = campoBusqueda ? campoBusqueda.value.trim().toLowerCase() : "";
 const filtroViaje = document.getElementById("filtroViaje");
 const viajeSeleccionado = filtroViaje ? filtroViaje.value : "";
    if (filtroViaje) {
@@ -928,8 +935,8 @@ reservasFiltradas.forEach(reserva => {
 
     list.appendChild(card);
   });
-   searchBox.oninput = () => loadAdminReservations();
-   filtroViaje.onchange = () => loadAdminReservations();
+   campoBusqueda.oninput = () => loadAdminReservations();
+filtroViaje.onchange = () => loadAdminReservations();
 }
    async function exportarReservasExcel() {
   const filtroViaje = document.getElementById("filtroViaje");
