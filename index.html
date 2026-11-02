@@ -771,9 +771,17 @@ if (grupos.size === 0) {
     pasajeros.textContent = "Reservas activas: " + viaje.pasajeros;
     tarjeta.appendChild(pasajeros);
 
-    const asientos = document.createElement("p");
-    asientos.textContent = "Asientos ocupados: " + viaje.asientos + " de 46";
-    tarjeta.appendChild(asientos);
+   const asientos = document.createElement("p");
+asientos.textContent = "Asientos ocupados: " + viaje.asientos + " de 46";
+tarjeta.appendChild(asientos);
+
+const disponibles = document.createElement("p");
+disponibles.textContent = "Asientos disponibles: " + Math.max(0, 46 - viaje.asientos);
+tarjeta.appendChild(disponibles);
+
+const porcentaje = document.createElement("p");
+porcentaje.textContent = "Ocupación del bus: " + Math.round((viaje.asientos / 46) * 100) + "%";
+tarjeta.appendChild(porcentaje);
 
     resumenViaje.appendChild(tarjeta);
   });
