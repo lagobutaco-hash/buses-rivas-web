@@ -930,8 +930,38 @@ reservasFiltradas.forEach(reserva => {
         await loadAdminReservations();
       };
 
-      card.appendChild(cancelButton);
+    card.appendChild(cancelButton);
     }
+
+    const whatsappButton = document.createElement("button");
+    whatsappButton.textContent = "Enviar recordatorio por WhatsApp";
+    whatsappButton.style.background = "#25D366";
+    whatsappButton.style.color = "#ffffff";
+    whatsappButton.style.marginTop = "8px";
+
+    whatsappButton.onclick = () => {
+      const telefono = String(reserva.telefono || "").replace(/\D/g, "");
+      const numero = telefono.startsWith("56") ? telefono : "56" + telefono;
+
+      const asientos = (reserva.asientos_reservados || [])
+        .map(a => a.asiento_numero)
+        .join(", ");
+
+      const mensaje =
+        `Hola ${reserva.nombre_completo}, te recordamos tu viaje con Buses Rivas.\n` +
+        `Destino: ${reserva.viajes?.destino || ""}\n` +
+        `Fecha: ${reserva.viajes?.fecha || ""}\n` +
+        `Salida: ${reserva.viajes?.hora || ""}\n` +
+        `Asiento(s): ${asientos}\n` +
+        `¡Te esperamos!`;
+
+      window.open(
+        "https://wa.me/" + numero + "?text=" + encodeURIComponent(mensaje),
+        "_blank"
+      );
+    };
+
+    card.appendChild(whatsappButton);
 
     list.appendChild(card);
   });
