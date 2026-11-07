@@ -1054,15 +1054,10 @@ botonPago.onclick = async () => {
     return;
   }
 
-  const nuevoSaldo = valorPasaje - totalPagado;
-
-  const { error } = await supabaseClient
-    .from("reservas")
-    .update({
-      monto_pagado: totalPagado,
-      saldo_pendiente: nuevoSaldo
-    })
-    .eq("id", reserva.id);
+   const { error } = await supabaseClient.rpc("registrar_pago", {
+  p_reserva_id: reserva.id,
+  p_monto: nuevoPago
+});
 
   if (error) {
     alert("Error al registrar el pago: " + error.message);
