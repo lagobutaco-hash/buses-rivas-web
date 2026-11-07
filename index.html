@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="es">
+<html lang="es">985
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -970,7 +970,7 @@ reservasFiltradas.forEach(reserva => {
   ["Hora", reserva.viajes?.hora || "No disponible"],
   ["Asientos", (reserva.asientos_reservados || [])
     .map(a => a.asiento_numero).join(", ")],
-  ["Estado", reserva.estado]
+  ["Estado", reserva.estado],
      ["Estado de pago",
   (Number(reserva.viajes?.valor_pasaje || 0) *
   (reserva.asientos_reservados || []).length -
