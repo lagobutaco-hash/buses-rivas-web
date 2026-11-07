@@ -971,6 +971,15 @@ reservasFiltradas.forEach(reserva => {
   ["Asientos", (reserva.asientos_reservados || [])
     .map(a => a.asiento_numero).join(", ")],
   ["Estado", reserva.estado]
+     ["Estado de pago",
+  (Number(reserva.viajes?.valor_pasaje || 0) *
+  (reserva.asientos_reservados || []).length -
+  Number(reserva.monto_pagado || 0)) <= 0
+    ? "Pagada"
+    : Number(reserva.monto_pagado || 0) > 0
+      ? "Abonada"
+      : "Pendiente de pago"
+],
 ];
 
     fields.forEach(([label, value]) => {
@@ -1000,6 +1009,20 @@ pagoInfo.innerHTML = `
 `;
 
 card.appendChild(pagoInfo);
+  const estadoPago = document.createElement("p");
+
+const saldoActual = Math.max(0, valorPasaje - montoPagado);
+
+estadoPago.textContent = saldoActual === 0
+  ? "ESTADO DE PAGO: PAGADA"
+  : montoPagado > 0
+    ? "ESTADO DE PAGO: ABONADA"
+    : "ESTADO DE PAGO: PENDIENTE";
+
+estadoPago.style.fontWeight = "bold";
+estadoPago.style.color = saldoActual === 0 ? "#198754" : "#b45309";
+
+card.appendChild(estadoPago);
   const inputPago = document.createElement("input");
 inputPago.type = "number";
 inputPago.min = "0";
