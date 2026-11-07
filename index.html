@@ -526,7 +526,7 @@ async function crearViaje() {
   }
 
   mensaje.textContent = "¡Viaje guardado correctamente!";
-
+await loadAdminTrips();
   document.getElementById("nuevoDestino").value = "";
   document.getElementById("nuevaFecha").value = "";
   document.getElementById("nuevaHora").value = "";
