@@ -742,6 +742,7 @@ searchBox.id = "buscarPasajero";  searchBox.style.width = "100%";
   estado,
   monto_pagado,
   saldo_pendiente,
+  monto_abono_requerido,
   created_at,
   viajes(destino, fecha, hora, valor_pasaje),
   asientos_reservados(asiento_numero)
@@ -781,6 +782,7 @@ data
   pendientes: 0,
   asientos: 0
 });
+      
 }
 
 const grupo = grupos.get(id);
@@ -981,7 +983,7 @@ const valorPasaje =
   (reserva.asientos_reservados || []).length;
 
 const montoPagado = Number(reserva.monto_pagado || 0);
-
+const abonoRequerido = Number(reserva.monto_abono_requerido || 0);
 const saldoPendiente = Math.max(0, valorPasaje - montoPagado);
 
 const pagoInfo = document.createElement("div");
