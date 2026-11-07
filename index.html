@@ -983,6 +983,7 @@ const valorPasaje =
   (reserva.asientos_reservados || []).length;
 
 const montoPagado = Number(reserva.monto_pagado || 0);
+  const abonoRequerido = Number(reserva.monto_abono_requerido || 0);
 const abonoRequerido = Number(reserva.monto_abono_requerido || 0);
 const saldoPendiente = Math.max(0, valorPasaje - montoPagado);
 
@@ -994,6 +995,7 @@ pagoInfo.style.borderRadius = "8px";
 
 pagoInfo.innerHTML = `
   <p>Valor total: $${valorPasaje.toLocaleString("es-CL")}</p>
+  <p>Abono solicitado: $${abonoRequerido.toLocaleString("es-CL")}</p>
   <p>Pagado: $${montoPagado.toLocaleString("es-CL")}</p>
   <p>Saldo pendiente: $${saldoPendiente.toLocaleString("es-CL")}</p>
 `;
