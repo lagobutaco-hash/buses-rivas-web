@@ -971,16 +971,17 @@ reservasFiltradas.forEach(reserva => {
   ["Asientos", (reserva.asientos_reservados || [])
     .map(a => a.asiento_numero).join(", ")],
   ["Estado", reserva.estado],
-     ["Estado de pago",
-  (Number(reserva.viajes?.valor_pasaje || 0) *
-  (reserva.asientos_reservados || []).length -
-  Number(reserva.monto_pagado || 0)) <= 0
-    ? "Pagada"
-    : Number(reserva.monto_pagado || 0) > 0
-      ? "Abonada"
-      : "Pendiente de pago"
+   ["Estado de pago",
+  Number(reserva.monto_pagado || 0) +
+  Number(reserva.saldo_pendiente || 0) <= 0
+    ? "Pendiente de pago"
+    : Number(reserva.saldo_pendiente || 0) === 0
+      ? "Pagada"
+      : Number(reserva.monto_pagado || 0) > 0
+        ? "Abonada"
+        : "Pendiente de pago"
 ],
-];
+     ];
 
     fields.forEach(([label, value]) => {
       const p = document.createElement("p");
@@ -988,8 +989,8 @@ reservasFiltradas.forEach(reserva => {
       card.appendChild(p);
     });
 const valorPasaje =
-  Number(reserva.viajes?.valor_pasaje || 0) *
-  (reserva.asientos_reservados || []).length;
+  Number(reserva.monto_pagado || 0) +
+  Number(reserva.saldo_pendiente || 0);
 
 const montoPagado = Number(reserva.monto_pagado || 0);
  const abonoRequerido = Number(reserva.monto_abono_requerido || 0);
@@ -1069,6 +1070,15 @@ botonPago.onclick = async () => {
 };
 
 card.appendChild(botonPago);
+  if (reserva.estado === "cancelada") {
+  inputPago.disabled = true;
+  botonPago.disabled = true;
+  botonPago.textContent = "Reserva cancelada";
+}if (reserva.estado === "cancelada") {
+  inputPago.disabled = true;
+  botonPago.disabled = true;
+  botonPago.textContent = "Reserva cancelada";
+}
     if (reserva.estado === "pendiente") {
       const confirmButton = document.createElement("button");
       confirmButton.textContent = "Confirmar reserva";
