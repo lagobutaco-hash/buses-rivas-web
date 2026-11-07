@@ -992,6 +992,12 @@ const valorPasaje =
   Number(reserva.monto_pagado || 0) +
   Number(reserva.saldo_pendiente || 0);
 
+console.log("DATOS DE PAGO:", {
+  monto_pagado: reserva.monto_pagado,
+  saldo_pendiente: reserva.saldo_pendiente,
+  valorPasaje: valorPasaje
+});
+
 const montoPagado = Number(reserva.monto_pagado || 0);
  const abonoRequerido = Number(reserva.monto_abono_requerido || 0);
 const saldoPendiente = Math.max(0, valorPasaje - montoPagado);
