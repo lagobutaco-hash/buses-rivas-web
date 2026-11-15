@@ -157,7 +157,14 @@ module.exports = async (req, res) => {
       });
     }
 
-     if (!respuestaFlow.ok || !datosFlow.url || !datosFlow.token) {
+     if (
+  !respuestaFlow.ok ||
+  !datosFlow.url ||
+  !datosFlow.token ||
+  (typeof datosFlow.flowOrder !== "string" &&
+   typeof datosFlow.flowOrder !== "number") ||
+  !String(datosFlow.flowOrder).trim()
+) {
       const marcarError = await fetch(
         `${supabaseUrl}/rest/v1/flow_pagos?commerce_order=eq.${encodeURIComponent(commerceOrder)}`,
         {
