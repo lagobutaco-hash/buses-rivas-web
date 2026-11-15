@@ -797,10 +797,10 @@ if (reserva.estado === "pendiente") {
 }
 
 grupo.asientos += cantidadAsientos;
-    const totalReserva = grupo.valorPasaje * cantidadAsientos;
+const totalReserva = grupo.valorPasaje * cantidadAsientos;
 const pagadoReserva = Number(reserva.monto_pagado || 0);
-const saldoReserva = Math.max(0, totalReserva - pagadoReserva);
-
+const saldoReserva = Number(reserva.saldo_pendiente || 0);
+grupo.valorReservas = (grupo.valorReservas || 0) + totalReserva;
 grupo.recaudado = (grupo.recaudado || 0) + pagadoReserva;
 grupo.saldoPendiente = (grupo.saldoPendiente || 0) + saldoReserva;
 
@@ -856,7 +856,7 @@ tarjeta.appendChild(montoPendiente);
 const totalVenta = document.createElement("p");
 totalVenta.textContent =
   "Venta potencial total: $" +
-  ((viaje.confirmados + viaje.pendientes) * viaje.valorPasaje).toLocaleString("es-CL");
+  (viaje.valorReservas || 0).toLocaleString("es-CL");
 tarjeta.appendChild(totalVenta);
     const recaudado = document.createElement("p");
 recaudado.textContent =
