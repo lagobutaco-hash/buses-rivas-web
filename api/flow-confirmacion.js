@@ -57,9 +57,22 @@ module.exports = async (req, res) => {
       return res.status(200).send("Pago todavía no aprobado");
     }
 
-    const comercio = pago.commerceOrder;
-    const flowOrder = String(pago.flowOrder);
-    const monto = Number(pago.amount);
+   const comercio = pago.commerceOrder;
+const flowOrder = pago.flowOrder;
+const monto = Number(pago.amount);
+
+if (
+  typeof comercio !== "string" ||
+  !comercio ||
+  (typeof flowOrder !== "string" && typeof flowOrder !== "number") ||
+  !String(flowOrder).trim() ||
+  !Number.isFinite(monto) ||
+  monto <= 0
+) {
+  throw new Error("Datos de pago inválidos");
+}
+
+const flowOrderValidado = String(flowOrder);
 
     if (
       !comercio ||
@@ -81,7 +94,7 @@ module.exports = async (req, res) => {
         },
         body: JSON.stringify({
           p_commerce_order: comercio,
-          p_flow_order: flowOrder,
+         p_flow_order: flowOrderValidado,
           p_monto: monto
         })
       }
