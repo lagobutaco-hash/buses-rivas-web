@@ -106,8 +106,12 @@
       <label>RUT</label>
       <input id="rut" placeholder="12.345.678-9">
       <label>Teléfono</label>
-      <input id="phone" placeholder="+56 9">
-      <button class="reserve" onclick="sendReservation()">Solicitar reserva por WhatsApp</button>
+     <input id="phone" placeholder="+56 9">
+
+<label for="email">Correo electrónico</label>
+<input id="email" type="email" placeholder="ejemplo@correo.com" required>
+
+<button class="reserve" onclick="sendReservation()">Solicitar reserva por WhatsApp</button>
       <p class="note">La solicitud debe ser confirmada por Buses Rivas. Este formulario todavía no procesa pagos ni bloquea asientos automáticamente.</p>
     </section>
   </main>
@@ -391,9 +395,11 @@ viajesDisponibles = viajes;
   const name = document.getElementById("name").value.trim();
   const rut = document.getElementById("rut").value.trim();
   const phone = document.getElementById("phone").value.trim();
+  const email = document.getElementById("email").value.trim();
+  const email = document.getElementById("email").value.trim();
   const numbers = [...selected].sort((a, b) => a - b);
 
-  if (!name || !rut || !phone || numbers.length === 0) {
+ if (!name || !rut || !phone || !email || numbers.length === 0) {
     alert("Completa tus datos y selecciona al menos un asiento.");
     return;
   }
@@ -412,8 +418,9 @@ viajesDisponibles = viajes;
           p_viaje_id: viajeId,
           p_nombre_completo: name,
           p_rut: rut,
-          p_telefono: phone,
-          p_asientos: numbers
+         p_telefono: phone,
+p_email: email,
+p_asientos: numbers
         })
       }
     );
