@@ -993,6 +993,9 @@ const valorPasaje =
   Number(reserva.saldo_pendiente || 0);
 
 console.log("DATOS DE PAGO:", {
+  id: reserva.id,
+  pasajero: reserva.nombre_completo,
+  estado: reserva.estado,
   monto_pagado: reserva.monto_pagado,
   saldo_pendiente: reserva.saldo_pendiente,
   valorPasaje: valorPasaje
