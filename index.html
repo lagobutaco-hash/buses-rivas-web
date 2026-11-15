@@ -230,8 +230,10 @@ const supabaseClient = window.supabase.createClient(
 async function loadPublicTrips() {
   const container = document.getElementById("publicTrips");
   container.innerHTML = "Cargando viajes...";
-
+let ventanaWhatsApp = null;
+  let reservaCreada = false;
   try {
+    ventanaWhatsApp = window.open("about:blank", "_blank");
     const response = await fetch(
       `${SUPABASE_URL}/rest/v1/viajes?activo=eq.true&select=id,destino,fecha,hora,valor_pasaje,monto_abono&order=fecha.asc`,
       {
@@ -398,37 +400,66 @@ viajesDisponibles = viajes;
   const email = document.getElementById("email").value.trim();
   const numbers = [...selected].sort((a, b) => a - b);
 
- if (!name || !rut || !phone || !email || numbers.length === 0) {
+if (!name || !rut || !phone || !email || numbers.length === 0) {
     alert("Completa tus datos y selecciona al menos un asiento.");
     return;
   }
 
+  let ventanaWhatsApp = null;
+  let reservaCreada = false;
+
   try {
-    const response = await fetch(
-      `${SUPABASE_URL}/rest/v1/rpc/crear_reserva`,
-      {
-        method: "POST",
-        headers: {
-          "apikey": SUPABASE_KEY,
-          "Authorization": `Bearer ${SUPABASE_KEY}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          p_viaje_id: viajeId,
-          p_nombre_completo: name,
-          p_rut: rut,
-         p_telefono: phone,
-p_email: email,
-p_asientos: numbers
-        })
-      }
-    );
+    ventanaWhatsApp = window.open("about:blank", "_blank");
+  const response = await fetch(
+  `${SUPABASE_URL}/rest/v1/rpc/crear_reserva_con_token`,
+  {
+    method: "POST",
+    headers: {
+      "apikey": SUPABASE_KEY,
+      "Authorization": `Bearer ${SUPABASE_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      p_viaje_id: viajeId,
+      p_nombre_completo: name,
+      p_rut: rut,
+      p_telefono: phone,
+      p_email: email,
+      p_asientos: numbers
+    })
+  }
+);
+      if (!response.ok) {
+  const error = await response.json();
+  throw new Error(error.message || "No se pudo guardar la reserva.");
+}
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "No se pudo guardar la reserva.");
-    }
+const resultado = await response.json();
+const datosReserva = Array.isArray(resultado) ? resultado[0] : resultado;
 
+if (!datosReserva || !datosReserva.reserva_id || !datosReserva.token_pago) {
+  throw new Error("No se recibió el número de reserva o el token de pago.");
+}
+
+const reservaId = datosReserva.reserva_id;
+const tokenPago = datosReserva.token_pago;
+reservaCreada = true;
+ const pagoResponse = await fetch("/api/crear-pago", {
+  method: "POST",
+  headers: {
+    "Content-Type": "application/json"
+  },
+  body: JSON.stringify({
+    reserva_id: reservaId,
+    token_pago: tokenPago
+  })
+});
+
+const pagoDatos = await pagoResponse.json();
+
+if (!pagoResponse.ok || !pagoDatos.checkoutUrl) {
+  throw new Error(pagoDatos.error || "No se pudo iniciar el pago.");
+}
   const viajeSeleccionado = viajesDisponibles.find(
   v => String(v.id) === String(viajeId)
 );
@@ -455,15 +486,28 @@ const message =
   `Saldo pendiente: $${saldoPendiente.toLocaleString("es-CL")}\n\n` +
   `Gracias por preferir Buses Rivas.`;
 
-    alert("¡Reserva registrada correctamente!");
+   alert("¡Reserva registrada correctamente! Ahora serás dirigido a Flow para pagar el abono.");
 
-    window.open(
-      "https://wa.me/56997862264?text=" + encodeURIComponent(message),
-      "_blank"
-    );
+if (ventanaWhatsApp) {
+  ventanaWhatsApp.location.href =
+    "https://wa.me/56997862264?text=" + encodeURIComponent(message);
+}
 
-  } catch (error) {
-    alert("No se pudo registrar la reserva: " + error.message);
+window.location.href = pagoDatos.checkoutUrl;
+} catch (error) {
+    if (ventanaWhatsApp && !ventanaWhatsApp.closed) {
+      ventanaWhatsApp.close();
+    }
+
+    if (reservaCreada) {
+      alert(
+        "Tu reserva quedó registrada, pero no se pudo iniciar el pago. " +
+        "No vuelvas a reservar los mismos asientos. " +
+        "Contacta a Buses Rivas para recibir ayuda."
+      );
+    } else {
+      alert("No se pudo registrar la reserva: " + error.message);
+    }
   }
 }
 async function adminLogin() {
