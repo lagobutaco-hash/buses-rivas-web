@@ -278,8 +278,8 @@ viajesDisponibles = viajes;
     });
 
   } catch (error) {
-    console.error(error);
-    container.innerHTML = "No se pudieron cargar los viajes.";
+    console.error("ERROR AL CARGAR VIAJES:", error);
+    container.innerHTML = "Error al cargar viajes: " + error.message;
   }
 }
    async function seleccionarViaje(id) {
