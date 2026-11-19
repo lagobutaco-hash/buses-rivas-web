@@ -122,17 +122,27 @@ module.exports = async (req, res) => {
       }
     );
 
-    if (!registro.ok) {
+   if (!registro.ok) {
+  const detalleRegistro = await registro.text();
+
+  console.error(
+    "Error registrando flow_pagos:",
+    registro.status,
+    detalleRegistro
+  );
+
   if (registro.status === 409) {
     return res.status(409).json({
       error: "Esta reserva ya tiene un pago en proceso. Intenta nuevamente más tarde."
     });
   }
 
-  throw new Error("No se pudo registrar la orden de pago");
+  throw new Error(
+    `No se pudo registrar la orden de pago. Código: ${registro.status}`
+  );
 }
 
-      let respuestaFlow;
+let respuestaFlow;
     let datosFlow;
 
     try {
