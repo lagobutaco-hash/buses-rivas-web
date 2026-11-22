@@ -214,7 +214,9 @@ let respuestaFlow;
     });
 
   } catch (error) {
-    console.error("Error creando pago Flow:", error.message);
+   console.error("Error creando pago Flow:", error);
+console.error("Mensaje:", error.message);
+console.error("Causa:", error.cause);
 
     return res.status(500).json({
       error: "No se pudo crear el pago"
