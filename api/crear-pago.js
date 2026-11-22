@@ -38,8 +38,19 @@ module.exports = async (req, res) => {
       { headers }
     );
 
-    if (!consulta.ok) {
-      throw new Error("No se pudo consultar la reserva");
+   if (!consulta.ok) {
+  const detalleConsulta = await consulta.text();
+
+  console.error(
+    "Error consultando reserva en Supabase:",
+    consulta.status,
+    detalleConsulta
+  );
+
+  throw new Error(
+    `No se pudo consultar la reserva. Código: ${consulta.status}`
+  );
+}
     }
 
     const reservas = await consulta.json();
