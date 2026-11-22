@@ -1129,6 +1129,47 @@ botonPago.onclick = async () => {
 };
 
 card.appendChild(botonPago);
+  const botonFlow = document.createElement("button");
+botonFlow.textContent = "Pagar abono con Flow";
+botonFlow.style.background = "#007bff";
+botonFlow.style.color = "white";
+botonFlow.style.marginLeft = "8px";
+
+botonFlow.onclick = async () => {
+  if (!reserva.token_pago) {
+    alert("Esta reserva no tiene token de pago.");
+    return;
+  }
+
+  botonFlow.disabled = true;
+
+  try {
+    const respuesta = await fetch("/api/crear-pago", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        reserva_id: reserva.id,
+        token_pago: reserva.token_pago
+      })
+    });
+
+    const datos = await respuesta.json();
+
+    if (!respuesta.ok || !datos.checkoutUrl) {
+      throw new Error(datos.error || "No se pudo iniciar el pago.");
+    }
+
+    window.location.href = datos.checkoutUrl;
+
+  } catch (error) {
+    alert("Error al iniciar Flow: " + error.message);
+    botonFlow.disabled = false;
+  }
+};
+
+card.appendChild(botonFlow);
   if (reserva.estado === "cancelada") {
   inputPago.disabled = true;
   botonPago.disabled = true;
