@@ -199,9 +199,11 @@ let respuestaFlow;
         throw new Error("No se pudo actualizar el estado de la orden");
       }
 
-      return res.status(502).json({
-        error: "Flow no pudo crear el pago. Puedes intentarlo nuevamente."
-      });
+     return res.status(502).json({
+  error: "Flow no pudo crear el pago.",
+  detalle: datosFlow,
+  codigoHTTP: respuestaFlow.status
+});
     }
     const actualizar = await fetch(
       `${supabaseUrl}/rest/v1/flow_pagos?commerce_order=eq.${encodeURIComponent(commerceOrder)}`,
