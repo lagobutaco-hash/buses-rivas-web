@@ -75,13 +75,7 @@ module.exports = async (req, res) => {
       });
     }
 
-    const origen = process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : null;
-
-    if (!origen) {
-      throw new Error("No se encontró la dirección del sitio");
-    }
+  const origen = "https://buses-rivas-ng7apiaf7-buses-rivas.vercel.app";
 
     const commerceOrder = crypto.randomUUID();
 
