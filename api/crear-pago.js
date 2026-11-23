@@ -51,8 +51,6 @@ module.exports = async (req, res) => {
     `No se pudo consultar la reserva. Código: ${consulta.status}`
   );
 }
-    }
-
     const reservas = await consulta.json();
     const reserva = reservas[0];
 
